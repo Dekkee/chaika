@@ -1,0 +1,20 @@
+# Секреты и персональные данные — НИКОГДА не коммитить.
+# (они живут в ~/.alfastrah_* и ~/.chaika_*, но на случай копирования в репо:)
+*.cookies
+.chaika_cookies
+.chaika_ehr_id
+.alfastrah_cookies
+alfastrah_profile.json
+*.har
+
+# Разрешён только шаблон профиля (без значений)
+!alfastrah_profile.template.json
+
+# Рантайм / выгрузки
+Заявления.csv
+claims.json
+_alfastrah/
+Downloads/
+
+# macOS
+.DS_Store

@@ -1,0 +1,39 @@
+{
+  "_comment": "Скопируй в ~/.alfastrah_profile.json, заполни своими данными, выставь права 600 (chmod 600). НЕ коммить этот файл с реальными значениями.",
+  "email": "<email>",
+  "phone": "+7(XXX)XXX-XX-XX",
+  "passport": {
+    "serie": "<серия>",
+    "number": "<номер>",
+    "issued": "<кем выдан>",
+    "issuedDate": "ГГГГ-ММ-ДД",
+    "bornPlace": "<место рождения>",
+    "citizen": "РФ"
+  },
+  "bank": {
+    "bic": "<БИК>",
+    "bankName": "<название банка>",
+    "corrAccount": "<корр. счёт>",
+    "personalAccount": "<номер счёта получателя>"
+  },
+  "documents": {
+    "inn": "<ИНН>",
+    "snils": "<СНИЛС>",
+    "migrationCard": "",
+    "residentialAddress": ""
+  },
+  "insured": {
+    "insuredName": "<ФИО застрахованного>",
+    "birthdate": "ГГГГ-ММ-ДД",
+    "country": "РФ"
+  },
+  "policy": {
+    "number": "<номер полиса ДМС, используется в пути API и как policyNumber>",
+    "claimsListId": "<id для GET /api/policy/dms/{id}/claims — может отличаться от номера полиса>"
+  },
+  "passportScanPath": "~/Downloads/1.jpg",
+  "defaults": {
+    "currency": "RUR",
+    "reason": "Амбулаторно-поликлиническая помощь/Outpatient treatment"
+  }
+}
