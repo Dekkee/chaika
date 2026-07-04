@@ -3,7 +3,7 @@ name: chaika
 description: Получить данные из личного кабинета клиники Чайка (chaika.com) — история визитов, протоколы, чеки, акты; и подать их на возмещение ДМС в АльфаСтрахование (med.alfastrah.ru)
 argument-hint: [visits|docs <дата>|details <entry-id>|refund]
 arguments: [action]
-allowed-tools: Bash(curl *) Bash(mkdir *) Bash(python3 *) Bash(rm *) Bash(find *) Bash(ls *) Bash(cat *) Bash("/Applications/Google Chrome.app/*") Read Write
+allowed-tools: Bash(curl *) Bash(mkdir *) Bash(python3 *) Bash(rm *) Bash(find *) Bash(ls *) Bash(cat *) Bash("/Applications/Google Chrome.app/*") Bash(google-chrome *) Bash(google-chrome-stable *) Bash(chromium *) Bash(chromium-browser *) Read Write
 ---
 
 # Клиника Чайка — парсинг личного кабинета
@@ -107,15 +107,21 @@ curl -sL "{transaction.actUrl}" -b "$COOKIES" -H "user-agent: ..." -o "Акт о
 ```
 
 **Кассовый чек** — зависит от провайдера:
-- **orangedata.ru** → конвертировать в PDF через Chrome headless:
+- **orangedata.ru** → конвертировать в PDF через Chrome headless. Бинарь резолвим
+  кросс-платформенно (macOS и Linux/WSL):
   ```bash
-  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+  CHROME="$(command -v google-chrome || command -v google-chrome-stable \
+    || command -v chromium || command -v chromium-browser \
+    || echo '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome')"
+  "$CHROME" \
     --headless --disable-gpu --no-sandbox \
     --print-to-pdf="Кассовый чек.pdf" \
     --print-to-pdf-no-header \
     --virtual-time-budget=5000 \
     "{slipUrls[0]}"
   ```
+  Если ни один бинарь не найден (нет Chrome/Chromium) — не падай: сохрани ссылку
+  `echo "{slipUrls[0]}" > "Кассовый чек (ссылка).txt"` и сообщи пользователю.
 - **taxcom.ru** → страница защищена капчей, автоматическое скачивание невозможно. Сохранить ссылку:
   ```bash
   echo "{slipUrls[0]}" > "Кассовый чек (ссылка).txt"
