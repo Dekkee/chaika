@@ -1,6 +1,6 @@
 ---
 name: chaika
-description: Получить данные из личного кабинета клиники Чайка (chaika.com) — история визитов, протоколы, чеки, акты; и подать их на возмещение ДМС в АльфаСтрахование (med.alfastrah.ru)
+description: Личный кабинет клиники Чайка (chaika.com) — история визитов, протоколы, чеки, акты — и подача на возмещение ДМС в АльфаСтрахование (med.alfastrah.ru). Use when the user says "/chaika", "мои визиты", "скачай чеки/акты/протокол (от врача/из клиники)", "подай на возмещение", "подай в страховую / по ДМС", "возмещение за визит/приём", or mentions Чайка / chaika.com / АльфаСтрахование / alfastrah. Подкоманды visits | docs <дата> | details <entry-id> | refund.
 argument-hint: [visits|docs <дата>|details <entry-id>|refund]
 allowed-tools: Bash(curl:*), Bash(mkdir:*), Bash(python3:*), Bash(rm:*), Bash(find:*), Bash(ls:*), Bash(cat:*), Bash("/Applications/Google Chrome.app":*), Bash(google-chrome:*), Bash(google-chrome-stable:*), Bash(chromium:*), Bash(chromium-browser:*), Read, Write
 ---
