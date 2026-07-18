@@ -2,8 +2,7 @@
 name: chaika
 description: Получить данные из личного кабинета клиники Чайка (chaika.com) — история визитов, протоколы, чеки, акты; и подать их на возмещение ДМС в АльфаСтрахование (med.alfastrah.ru)
 argument-hint: [visits|docs <дата>|details <entry-id>|refund]
-arguments: [action]
-allowed-tools: Bash(curl *) Bash(mkdir *) Bash(python3 *) Bash(rm *) Bash(find *) Bash(ls *) Bash(cat *) Bash("/Applications/Google Chrome.app/*") Bash(google-chrome *) Bash(google-chrome-stable *) Bash(chromium *) Bash(chromium-browser *) Read Write
+allowed-tools: Bash(curl:*), Bash(mkdir:*), Bash(python3:*), Bash(rm:*), Bash(find:*), Bash(ls:*), Bash(cat:*), Bash("/Applications/Google Chrome.app":*), Bash(google-chrome:*), Bash(google-chrome-stable:*), Bash(chromium:*), Bash(chromium-browser:*), Read, Write
 ---
 
 # Клиника Чайка — парсинг личного кабинета
