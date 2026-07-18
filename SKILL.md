@@ -182,8 +182,8 @@ curl -sL "{transaction.actUrl}" -b "$COOKIES" -H "user-agent: ..." -o "Акт о
 
 ### Конфигурация (перс. данные хранятся ВНЕ скилла)
 
-- `~/.alfastrah_profile.json` — персональные данные (паспорт, банк, ИНН/СНИЛС, ФИО, номер полиса, путь к скану паспорта/полиса). Шаблон с именами полей — `alfastrah_profile.template.json` в этом скилле. Права 600 (`chmod 600`). **В скилл реальные значения не коммитить.**
-- `~/.alfastrah_cookies` — сессия. Сними `Copy as cURL` любого запроса med.alfastrah.ru, сохрани всю строку кук целиком. `accessToken` (JWT) живёт **~5 мин и НЕ продлевается** — снимай свежие куки прямо перед запуском.
+- `~/.alfastrah_profile.json` — персональные данные (паспорт, банк, ИНН/СНИЛС, ФИО, номер полиса, путь к скану паспорта/полиса — можно **списком** путей, все прикладываются). Шаблон с именами полей — `alfastrah_profile.template.json` в этом скилле. Права 600 (`chmod 600`). **В скилл реальные значения не коммитить.**
+- `~/.alfastrah_cookies` — сессия. Сними `Copy as cURL` **XHR-запроса** (DevTools → Network → фильтр **Fetch/XHR** → любой запрос к `med.alfastrah.ru/api/...`), сохрани всю строку кук целиком. **Навигационный (document) запрос НЕ годится**: в нём только одноразовый `AuthorizationToken`, который браузер уже потратил при логине (API ответит «Ошибка получения токена от сервиса авторизации»); живой `accessToken` есть только в XHR-куках. `accessToken` (JWT) живёт **~5 мин и НЕ продлевается** — снимай свежие куки прямо перед запуском.
 
 **Если файлов нет — не падай молча, запроси у пользователя:**
 
@@ -191,7 +191,8 @@ curl -sL "{transaction.actUrl}" -b "$COOKIES" -H "user-agent: ..." -o "Акт о
   1. **Прислать HAR или `Copy as cURL` прошлой подачи возмещения** (POST `/api/policy/dms/{policy}/claim`) — тогда собери профиль автоматически: `email, phone, passport, bank, documents{inn,snils}` из тела запроса, `insured{insuredName,birthdate}` и `policy.number` из `claimInfo`. `policy.claimsListId` возьми из URL `GET .../dms/{id}/claims`, если он есть в HAR.
   2. **Заполнить поля вручную** — пройди по `alfastrah_profile.template.json` и спроси значения по группам (паспорт, банк, ИНН/СНИЛС, ФИО, номер полиса).
   Затем запиши `~/.alfastrah_profile.json` (через python `json.dump`) и выставь права 600 (`os.chmod(path, 0o600)`).
-- **Нет `~/.alfastrah_cookies`** — попроси свежий `Copy as cURL` любого запроса med.alfastrah.ru и сохрани всю строку кук целиком (нужно каждый запуск — токен 5 мин).
+  Часть полей можно снять с портала по свежим кукам, не спрашивая пользователя: `GET /api/policy/dms/{policy}` отдаёт `insuredName, birthdate, phone, email, employeePolicyId` (данные владельца полиса). Паспортные данные можно прочитать со скана паспорта (vision), если он есть на диске; банк/ИНН/СНИЛС портал не отдаёт — только спрашивать. **НЕ жди предзаполнения от `GET /policy/dms/{policy}/claim`** — этот эндпоинт возвращает только метаданные формы (категории/валюты/соглашение), а не сохранённые данные пользователя.
+- **Нет `~/.alfastrah_cookies`** — попроси свежий `Copy as cURL` XHR-запроса (см. выше) и сохрани всю строку кук целиком (нужно каждый запуск — токен 5 мин).
 
 ### Поток API
 
@@ -199,12 +200,27 @@ curl -sL "{transaction.actUrl}" -b "$COOKIES" -H "user-agent: ..." -o "Акт о
 
 1. `POST /api/policy/dms/{policy}/claim` — JSON `{email,phone,passport,bank,documents{inn,snils},claimInfo{insuredName,birthdate,policyNumber,date,description,reason,sum,currency:RUR}}` → `data.document.id` = **№ заявления** (он же в URL PUT и в `title` списка).
 2. `PUT /api/policy/dms/{policy}/claim/{id}` — то же тело **плюс** `files:[{name, body}]`, где `body` — **сырой base64** файла (PDF/jpg). Так грузятся документы (не multipart).
-3. Список/проверка: `GET /api/policy/dms/{claimsListId}/claims?count=ALL&type=REFUND` — поле `id` не отдаётся, номер в `title` «Заявление №…». `claimsListId` может отличаться от номера полиса (в профиле — отдельным полем).
+3. Список/проверка: `GET /api/policy/dms/{claimsListId}/claims?count=ALL&type=REFUND` — поле `id` не отдаётся, номер в `title` «Заявление №…». `claimsListId` может отличаться от номера полиса (в профиле — отдельным полем): это `employeePolicyId`/`policyId` из `GET /api/policy/dms/{policy}` (с номером полиса эндпоинт отвечает 400).
+
+### Подача за родственника (застрахованный ≠ отправитель)
+
+Портальная опция `claimOption: "RELATIVE"` — **отдельного поля «степень родства» в payload НЕТ**.
+Тот же payload, но:
+
+- `claimInfo.insuredName/birthdate/policyNumber` — данные **родственника** (у члена семьи свой номер полиса);
+- `email/phone/passport/bank/documents` — остаются **отправителя** (он же получатель выплаты);
+- POST/PUT идут под полисом **отправителя** (`{policy}` в URL — его);
+- в `files` прикладывай **оба паспорта** (отправителя и застрахованного).
+
+Список застрахованных с их полисами: `GET /api/policy/dms/{policy}` → `data.claimOptions.persons[]`
+(`{insuredName, birthdate, policyNumber}`) — бери данные оттуда, не спрашивай руками.
+В `claims.json` это блок `insured` на уровне заявления (см. docstring скрипта); без него скрипт
+берёт `profile.insured` (обычная подача за себя).
 
 ### Алгоритм
 
 1. Уточни у пользователя визиты к подаче (покажи дату/сумму/повод). Сумму бери из transactions (action `docs`). Категорию `reason` по умолчанию `"Амбулаторно-поликлиническая помощь/Outpatient treatment"`; **стоматология — вероятно отдельная категория**, уточни. Уточни доп. документы (например скан паспорта/полиса — путь в профиле, прикладывается ко всем).
-2. Сформируй транзиентный `claims.json` (список `{folder,date,description,sum,reason?,doctor?,visit?,files?}`). **Перс. данные не дублируй** — они в профиле. Положи рядом, напр. `~/Downloads/chaika/_alfastrah/claims.json`.
+2. Сформируй транзиентный `claims.json` (список `{folder,date,description,sum,reason?,doctor?,visit?,files?,insured?}`). Элемент `files` — имя файла в папке визита ИЛИ `{"path","name"}` (файл `path` грузится под именем `name` — так чек со случайным именем уходит как «Кассовый чек.pdf»). `insured` — блок застрахованного при подаче за родственника. **Перс. данные не дублируй** — они в профиле. Положи рядом, напр. `~/Downloads/chaika/_alfastrah/claims.json`. Суммы, если нет доступа к transactions (нет кук Чайки), можно вытащить из «Акт оказанных услуг.pdf» (строка «Итого»); pdftotext может отсутствовать — рабочий фолбэк: `pdfjs-dist` через node.
 3. Прогон `--dry-run`: покажи payload и проверь файлы. **Подтверди у пользователя** — это РЕАЛЬНЫЕ страховые заявления.
 4. Запусти без флага. Скрипт делает POST→PUT, пишет `Заявление №<id>.txt` в папку визита и строку в таблицу `~/Downloads/chaika/Заявления.csv` со статусом `Отправлено`. Есть защита от дубля (пропуск, если в папке уже есть `Заявление №*.txt`).
 5. (Опц.) Обнови статусы до актуальных: `--sync` (дёргает список с портала и переписывает столбец «Статус» в таблице). Статусы идут по цепочке **Отправлено → На рассмотрении → Оплачено** (рассмотрение до 15 кал. дней).

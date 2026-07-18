@@ -29,9 +29,12 @@
   },
   "policy": {
     "number": "<номер полиса ДМС, используется в пути API и как policyNumber>",
-    "claimsListId": "<id для GET /api/policy/dms/{id}/claims — может отличаться от номера полиса>"
+    "claimsListId": "<id для GET /api/policy/dms/{id}/claims — это employeePolicyId/policyId из GET /api/policy/dms/{полис}, НЕ номер полиса (с номером — 400)>"
   },
-  "passportScanPath": "~/Downloads/1.jpg",
+  "passportScanPath": [
+    "~/Downloads/passport1.jpg",
+    "<строка или список; за родственника — оба паспорта, прикладываются ко всем заявлениям>"
+  ],
   "defaults": {
     "currency": "RUR",
     "reason": "Амбулаторно-поликлиническая помощь/Outpatient treatment"
